@@ -12,6 +12,7 @@ func main() {
 	doCheckStructure := flag.Bool("check", false, "Check directory structure")
 	doDownloadImages := flag.Bool("download", false, "Download images")
 	doCreateGif := flag.Bool("gif", false, "Generate gif file")
+	doServe := flag.Bool("serve", false, "Start the webserver")
 	gifDir := flag.String("gifdir", "gifs", "Directory for generated gifs")
 	imagesDir := flag.String("imagesdir", "images", "Directory for downloaded images")
 	frameTime := flag.Int("frametime", 50, "Delay between frames in 10ms")
@@ -38,5 +39,11 @@ func main() {
 			log.Println(err)
 		}
 	}
+
+	if *doServe {
+		log.Println(" --------- Starting webserver")
+		StartServer()
+	}
+
 	log.Println(" --------- Finished")
 }
