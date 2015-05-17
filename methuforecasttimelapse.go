@@ -33,19 +33,6 @@ func ensureDirectory(dir string) error {
 	}
 }
 
-func EnsureDirectoryStructure(imagesDir, gifDir string) bool {
-	err1 := ensureDirectory(imagesDir)
-	err2 := ensureDirectory(gifDir)
-	if err1 != nil {
-		log.Printf("Failed to create directory %v, error: %v", imagesDir, err1)
-	}
-	if err2 != nil {
-		log.Printf("Failed to create directory %v, error: %v", gifDir, err2)
-	}
-
-	return err1 == nil && err2 == nil
-}
-
 func generateFileName(t time.Time, hour int) string {
 	return fmt.Sprintf(
 		"dewa%04d%02d%02d_%02d00+Szeged.png",
@@ -57,15 +44,6 @@ func generateFileName(t time.Time, hour int) string {
 
 func generateFileNameList(today time.Time) []string {
 	yesterday := today.Add(-1 * 24 * time.Hour)
-	/*result := make([]string, 24, 24)
-	for hour := 0; hour < 24; hour++ {
-		current := generateFileName(today, hour)
-		result[hour] = current
-	}
-	for hour := 0; hour < 24; hour++ {
-		current := generateFileName(yesteday, hour)
-		result = append(result, current)
-	}*/
 	result := make([]string, 4, 4)
 	result[0] = generateFileName(today, 0)
 	result[1] = generateFileName(today, 12)
@@ -97,7 +75,6 @@ func filterExistingFiles(l []string, imageDir string) []string {
 }
 
 func downloadFile(f, imageDir string) error {
-	//log.Println("Trying to download ", f)
 	resp, err := http.Get(fmt.Sprintf("%v/%v", URL_PREFIX, f))
 	if err != nil {
 		return err
@@ -131,6 +108,20 @@ func tryDownloadFiles(l []string, imageDir string) {
 	}
 }
 
+func loadImage(f string) (*image.Paletted, error) {
+	imgFile, err := os.Open(f)
+	if err != nil {
+		return nil, err
+	}
+	defer imgFile.Close()
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertImage(img)
+}
+
 func convertImage(img image.Image) (*image.Paletted, error) {
 	buf := bytes.Buffer{}
 	// Encode the image as a gif to the buffer
@@ -150,20 +141,6 @@ func convertImage(img image.Image) (*image.Paletted, error) {
 	return palettedImg, nil
 }
 
-func loadImage(f string) (*image.Paletted, error) {
-	imgFile, err := os.Open(f)
-	if err != nil {
-		return nil, err
-	}
-	defer imgFile.Close()
-	img, _, err := image.Decode(imgFile)
-	if err != nil {
-		return nil, err
-	}
-
-	return convertImage(img)
-}
-
 func saveGif(f string, img *gif.GIF) error {
 	imgFile, err := os.Create(f)
 	if err != nil {
@@ -173,6 +150,26 @@ func saveGif(f string, img *gif.GIF) error {
 	err = gif.EncodeAll(imgFile, img)
 	imgFile.Close()
 	return err
+}
+
+func EnsureDirectoryStructure(imagesDir, gifDir string) bool {
+	err1 := ensureDirectory(imagesDir)
+	err2 := ensureDirectory(gifDir)
+	if err1 != nil {
+		log.Printf("Failed to create directory %v, error: %v", imagesDir, err1)
+	}
+	if err2 != nil {
+		log.Printf("Failed to create directory %v, error: %v", gifDir, err2)
+	}
+
+	return err1 == nil && err2 == nil
+}
+
+func DownloadImages(imageDir string) {
+	today := time.Now()
+	l := generateFileNameList(today)
+	l = filterExistingFiles(l, imageDir)
+	tryDownloadFiles(l, imageDir)
 }
 
 func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
@@ -199,11 +196,4 @@ func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
 	// Create and save the GIF
 	g := &gif.GIF{images, delays, 0 /*loop count*/}
 	return saveGif(gifFileName, g)
-}
-
-func DownloadImages(imageDir string) {
-	today := time.Now()
-	l := generateFileNameList(today)
-	l = filterExistingFiles(l, imageDir)
-	tryDownloadFiles(l, imageDir)
 }
