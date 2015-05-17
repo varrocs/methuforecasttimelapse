@@ -29,7 +29,7 @@ func main() {
 
 	if *doDownloadImages {
 		log.Println("Downloading images")
-		DownloadImages()
+		DownloadImages(*imagesDir)
 	}
 	if *doCreateGif {
 		log.Println("Creating gif")

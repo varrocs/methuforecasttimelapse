@@ -17,10 +17,7 @@ import (
 )
 
 const (
-	URL_PREFIX      = "http://met.hu/img/dewa"
-	IMAGES_LOCATION = "images"
-	GIF_LOCATION    = "gifs"
-	GIF_FRAME_10MS  = 50
+	URL_PREFIX = "http://met.hu/img/dewa"
 )
 
 func ensureDirectory(dir string) error {
@@ -59,10 +56,15 @@ func generateFileName(t time.Time, hour int) string {
 }
 
 func generateFileNameList(today time.Time) []string {
+	yesteday := today.Add(-1 * 24 * time.Hour)
 	result := make([]string, 24, 24)
 	for hour := 0; hour < 24; hour++ {
 		current := generateFileName(today, hour)
 		result[hour] = current
+	}
+	for hour := 0; hour < 24; hour++ {
+		current := generateFileName(yesteday, hour)
+		result = append(result, current)
 	}
 	return result
 }
@@ -75,21 +77,21 @@ func isFileExist(fileName string) bool {
 	return true
 }
 
-func filterExistingFiles(l []string) []string {
+func imageName(f, imageDir string) string {
+	return fmt.Sprintf("./%v/%v", imageDir, f)
+}
+
+func filterExistingFiles(l []string, imageDir string) []string {
 	result := make([]string, 0, 0)
 	for _, f := range l {
-		if !isFileExist(imageName(f)) {
+		if !isFileExist(imageName(f, imageDir)) {
 			result = append(result, f)
 		}
 	}
 	return result
 }
 
-func imageName(f string) string {
-	return fmt.Sprintf("./%v/%v", IMAGES_LOCATION, f)
-}
-
-func downloadFile(f string) error {
+func downloadFile(f, imageDir string) error {
 	//log.Println("Trying to download ", f)
 	resp, err := http.Get(fmt.Sprintf("%v/%v", URL_PREFIX, f))
 	if err != nil {
@@ -100,7 +102,7 @@ func downloadFile(f string) error {
 		return fmt.Errorf("Failed to download file, status: %v", resp.Status)
 	}
 
-	imageFile, err := os.Create(imageName(f))
+	imageFile, err := os.Create(imageName(f, imageDir))
 	if err != nil {
 		return err
 	}
@@ -110,9 +112,9 @@ func downloadFile(f string) error {
 	return err
 }
 
-func tryDownloadFiles(l []string) {
+func tryDownloadFiles(l []string, imageDir string) {
 	for _, f := range l {
-		err := downloadFile(f)
+		err := downloadFile(f, imageDir)
 		/*if err != nil {
 			log.Printf("Failed to download %v: %v\n", f, err)
 		} else {
@@ -194,9 +196,9 @@ func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
 	return saveGif(gifFileName, g)
 }
 
-func DownloadImages() {
+func DownloadImages(imageDir string) {
 	today := time.Now()
 	l := generateFileNameList(today)
-	l = filterExistingFiles(l)
-	tryDownloadFiles(l)
+	l = filterExistingFiles(l, imageDir)
+	tryDownloadFiles(l, imageDir)
 }
