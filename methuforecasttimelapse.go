@@ -56,8 +56,8 @@ func generateFileName(t time.Time, hour int) string {
 }
 
 func generateFileNameList(today time.Time) []string {
-	yesteday := today.Add(-1 * 24 * time.Hour)
-	result := make([]string, 24, 24)
+	yesterday := today.Add(-1 * 24 * time.Hour)
+	/*result := make([]string, 24, 24)
 	for hour := 0; hour < 24; hour++ {
 		current := generateFileName(today, hour)
 		result[hour] = current
@@ -65,7 +65,12 @@ func generateFileNameList(today time.Time) []string {
 	for hour := 0; hour < 24; hour++ {
 		current := generateFileName(yesteday, hour)
 		result = append(result, current)
-	}
+	}*/
+	result := make([]string, 4, 4)
+	result[0] = generateFileName(today, 0)
+	result[1] = generateFileName(today, 12)
+	result[2] = generateFileName(yesterday, 0)
+	result[3] = generateFileName(yesterday, 12)
 	return result
 }
 
