@@ -174,17 +174,30 @@ func DownloadImages(imageDir string) (downloaded int) {
 	return tryDownloadFiles(l, imageDir)
 }
 
-func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
-	imageFileInfos, err := ioutil.ReadDir(imagesLocation)
+func ListImageFiles(location string) ([]string, error) {
+	imageFileInfos, err := ioutil.ReadDir(location)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	result := make([]string, len(imageFileInfos), len(imageFileInfos))
+	for i, f := range imageFileInfos {
+		result[i] = path.Join(location, f.Name())
+	}
+
+	return result, nil
+}
+
+func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
 	images := make([]*image.Paletted, 0, 0)
 	delays := make([]int, 0, 0)
 	// Load the images
-	for _, f := range imageFileInfos {
-		fileName := f.Name()
-		im, err := loadImage(path.Join(imagesLocation, fileName))
+	imageFiles, err := ListImageFiles(imagesLocation)
+	if err != nil {
+		return err
+	}
+	for _, fileName := range imageFiles {
+		im, err := loadImage(fileName)
 		if err == nil {
 			delays = append(delays, frameTime)
 			images = append(images, im)
