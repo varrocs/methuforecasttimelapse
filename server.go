@@ -1,42 +1,26 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 )
 
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("mainpage.html")
+func gifHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println(*r)
+	w.Header().Set("content-type", "image/gif")
+	http.ServeFile(w, r, "gifs/anim.gif")
+}
+
+func StartServer(localAddress string, port int) {
+	staticServer := http.FileServer(http.Dir("static"))
+	http.HandleFunc("/gif", gifHandler)
+	http.Handle("/", staticServer)
+
+	serverAddress := fmt.Sprintf("%v:%v", localAddress, port)
+	log.Println("Listening on", serverAddress)
+	err := http.ListenAndServe(serverAddress, nil)
 	if err != nil {
-		t.Execute(w, nil)
-	}
-}
-
-func handleGif(w http.ResponseWriter, r *http.Request) {
-}
-
-func handleUpdate(w http.ResponseWriter, r *http.Request) {
-}
-
-func handleLog(w http.ResponseWriter, r *http.Request) {
-}
-
-func StartServer() {
-	port := flag.Int("port", 8080, "Web server listening port")
-	address := flag.String("address", "0.0.0.0", "Local address to bind to")
-
-	flag.Parse()
-
-	http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/gif", handleGif)
-	http.HandleFunc("/update", handleUpdate)
-	http.HandleFunc("/log", handleLog)
-
-	err := http.ListenAndServe(fmt.Sprintf("%v:%v", *address, *port), nil)
-	if err != nil {
-		log.Println("Problem with the server start ", err)
+		log.Println("Problem with the server start", err)
 	}
 }

@@ -94,7 +94,7 @@ func downloadFile(f, imageDir string) error {
 	return err
 }
 
-func tryDownloadFiles(l []string, imageDir string) {
+func tryDownloadFiles(l []string, imageDir string) (downloaded int) {
 	for _, f := range l {
 		err := downloadFile(f, imageDir)
 		/*if err != nil {
@@ -104,8 +104,10 @@ func tryDownloadFiles(l []string, imageDir string) {
 		}*/
 		if err == nil {
 			log.Printf("Downloaded %v\n", f)
+			downloaded += 1
 		}
 	}
+	return
 }
 
 func loadImage(f string) (*image.Paletted, error) {
@@ -165,11 +167,11 @@ func EnsureDirectoryStructure(imagesDir, gifDir string) bool {
 	return err1 == nil && err2 == nil
 }
 
-func DownloadImages(imageDir string) {
+func DownloadImages(imageDir string) (downloaded int) {
 	today := time.Now()
 	l := generateFileNameList(today)
 	l = filterExistingFiles(l, imageDir)
-	tryDownloadFiles(l, imageDir)
+	return tryDownloadFiles(l, imageDir)
 }
 
 func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
