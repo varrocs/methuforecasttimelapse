@@ -1,4 +1,4 @@
-package main
+package methuforecasttimelapse
 
 import (
 	"fmt"
@@ -25,13 +25,17 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, images)
 }
 
-func StartServer(localAddress string, port int) {
+func initHandlers() {
 	staticServer := http.FileServer(http.Dir("static"))
 	imageServer := http.FileServer(http.Dir("images"))
 	http.HandleFunc("/gif", gifHandler)
 	http.HandleFunc("/gallery", galleryHandler)
 	http.Handle("/images/", http.StripPrefix("/images/", imageServer))
 	http.Handle("/", staticServer)
+}
+
+func StartServer(localAddress string, port int) {
+	initHandlers()
 
 	serverAddress := fmt.Sprintf("%v:%v", localAddress, port)
 	log.Println("Listening on", serverAddress)
@@ -39,4 +43,9 @@ func StartServer(localAddress string, port int) {
 	if err != nil {
 		log.Println("Problem with the server start", err)
 	}
+}
+
+// For the Google App Engine initialization
+func init() {
+	initHandlers()
 }

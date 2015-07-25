@@ -1,4 +1,4 @@
-package main
+package methuforecasttimelapse
 
 import (
 	"bytes"
@@ -209,6 +209,6 @@ func CreateGif(frameTime int, imagesLocation string, gifFileName string) error {
 		return fmt.Errorf("Failed to load any images from '%v'", imagesLocation)
 	}
 	// Create and save the GIF
-	g := &gif.GIF{images, delays, 0 /*loop count*/}
+	g := &gif.GIF{Image: images, Delay: delays, LoopCount: 0}
 	return saveGif(gifFileName, g)
 }
